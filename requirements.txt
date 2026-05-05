@@ -2,4 +2,4 @@ streamlit
 librosa
 numpy
 scikit-learn
-keras
+tensorflow==2.13.0
