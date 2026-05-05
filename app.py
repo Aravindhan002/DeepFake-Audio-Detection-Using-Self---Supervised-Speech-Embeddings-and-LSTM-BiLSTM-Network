@@ -936,7 +936,7 @@ def main():
                 @st.cache_resource
                 def load_model():
                     try:
-                        model = tf.keras.models.load_model(r'C:\Users\Madhan\OneDrive\Desktop\Audio-DeepFake-Detection\savedmodels\updated_model.keras')
+                        model = tf.keras.models.load_model(r'my_model.h5')
                         return model
                     except Exception as e:
                         st.error(f"Error loading model: {e}")
