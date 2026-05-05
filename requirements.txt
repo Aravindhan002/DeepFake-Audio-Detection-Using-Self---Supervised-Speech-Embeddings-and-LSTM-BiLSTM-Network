@@ -1,4 +1,6 @@
 streamlit
-librosa
-tensorflow
 numpy
+pandas
+librosa==0.10.0
+scikit-learn
+tensorflow-cpu==2.13.0
