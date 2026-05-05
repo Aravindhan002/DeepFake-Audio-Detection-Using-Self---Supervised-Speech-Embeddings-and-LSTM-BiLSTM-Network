@@ -1,6 +1,6 @@
 import streamlit as st
 import numpy as np
-from keras.models import load_model
+import tensorflow as tf
 import librosa
 import io
 import plotly.graph_objects as go
@@ -936,7 +936,7 @@ def main():
                 @st.cache_resource
                 def load_model():
                     try:
-                        model = load_model("my_model.h5")
+                        tf.keras.models.load_model("my_model.h5")
                         return model
                     except Exception as e:
                         st.error(f"Error loading model: {e}")
