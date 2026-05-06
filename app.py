@@ -4,59 +4,109 @@ import tensorflow as tf
 import librosa
 import io
 import plotly.graph_objects as go
-import time
 import base64
 from datetime import datetime
-from pydub import AudioSegment
 import warnings
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 
-# Page Config
+# ---------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------
 st.set_page_config(
     page_title="Audio Deepfake Detection",
     page_icon="🔊",
     layout="centered"
 )
 
-# ------------------------------
-# Load Model
-# ------------------------------
+# ---------------------------------------------------
+# SIMPLE CSS
+# ---------------------------------------------------
+st.markdown("""
+<style>
+
+.main-title {
+    text-align:center;
+    font-size:50px;
+    font-weight:bold;
+    color:#1E88E5;
+}
+
+.subtitle {
+    text-align:center;
+    color:gray;
+    margin-bottom:30px;
+}
+
+.stButton button {
+    width:100%;
+    background:#1E88E5;
+    color:white;
+    border:none;
+    padding:12px;
+    border-radius:10px;
+    font-size:18px;
+}
+
+.stButton button:hover {
+    background:#1565C0;
+    color:white;
+}
+
+.result-box {
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+    font-size:25px;
+    font-weight:bold;
+    margin-top:20px;
+}
+
+.real {
+    background:#E8F5E9;
+    color:#2E7D32;
+}
+
+.fake {
+    background:#FFEBEE;
+    color:#C62828;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------------------------------------------
+# LOAD MODEL
+# ---------------------------------------------------
 @st.cache_resource
 def load_model():
     try:
         model = tf.keras.models.load_model("updated_model.h5")
         return model
+
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
 
 model = load_model()
 
-# ------------------------------
-# Audio Feature Extraction
-# ------------------------------
-def extract_features_from_audio(audio_bytes, file_type, max_length=500, sr=16000, n_mfcc=40):
+# ---------------------------------------------------
+# AUDIO FEATURE EXTRACTION
+# ---------------------------------------------------
+def extract_features_from_audio(
+    audio_bytes,
+    max_length=500,
+    sr=16000,
+    n_mfcc=40
+):
+
     try:
 
-        # Handle M4A files
-        if file_type == "m4a":
-            audio = AudioSegment.from_file(
-                io.BytesIO(audio_bytes),
-                format="m4a"
-            )
-
-            wav_io = io.BytesIO()
-            audio.export(wav_io, format="wav")
-            wav_io.seek(0)
-
-            audio_array, _ = librosa.load(wav_io, sr=sr)
-
-        else:
-            audio_array, _ = librosa.load(
-                io.BytesIO(audio_bytes),
-                sr=sr
-            )
+        audio_array, _ = librosa.load(
+            io.BytesIO(audio_bytes),
+            sr=sr,
+            mono=True
+        )
 
         mfccs = librosa.feature.mfcc(
             y=audio_array,
@@ -64,17 +114,21 @@ def extract_features_from_audio(audio_bytes, file_type, max_length=500, sr=16000
             n_mfcc=n_mfcc
         )
 
-        # Padding / Trimming
+        # Padding or trimming
         if mfccs.shape[1] < max_length:
+
             pad_width = max_length - mfccs.shape[1]
+
             mfccs = np.pad(
                 mfccs,
                 ((0, 0), (0, pad_width)),
                 mode='constant'
             )
+
         else:
             mfccs = mfccs[:, :max_length]
 
+        # Reshape
         mfccs = mfccs.reshape(
             1,
             mfccs.shape[0],
@@ -88,9 +142,9 @@ def extract_features_from_audio(audio_bytes, file_type, max_length=500, sr=16000
         st.error(f"Error processing audio: {e}")
         return None, None, None
 
-# ------------------------------
-# Waveform Plot
-# ------------------------------
+# ---------------------------------------------------
+# WAVEFORM
+# ---------------------------------------------------
 def create_waveform(audio_data, sr):
 
     time_axis = np.linspace(
@@ -117,18 +171,22 @@ def create_waveform(audio_data, sr):
 
     return fig
 
-# ------------------------------
-# Confidence Gauge
-# ------------------------------
+# ---------------------------------------------------
+# CONFIDENCE GAUGE
+# ---------------------------------------------------
 def create_gauge(confidence):
 
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=confidence * 100,
+
         title={'text': "Confidence"},
+
         gauge={
             'axis': {'range': [0, 100]},
+
             'bar': {'color': "red"},
+
             'steps': [
                 {'range': [0, 50], 'color': "green"},
                 {'range': [50, 100], 'color': "red"}
@@ -140,20 +198,25 @@ def create_gauge(confidence):
 
     return fig
 
-# ------------------------------
-# HTML Report Generator
-# ------------------------------
+# ---------------------------------------------------
+# HTML REPORT
+# ---------------------------------------------------
 def generate_html_report(result):
 
-    status = "DEEPFAKE DETECTED" if result['is_deepfake'] else "AUTHENTIC AUDIO"
+    status = (
+        "DEEPFAKE DETECTED"
+        if result['is_deepfake']
+        else "AUTHENTIC AUDIO"
+    )
 
     html = f"""
     <html>
+
     <head>
         <title>Audio Deepfake Report</title>
     </head>
 
-    <body style="font-family: Arial; padding: 30px;">
+    <body style="font-family:Arial;padding:30px;">
 
         <h1>🔊 Audio Deepfake Detection Report</h1>
 
@@ -163,54 +226,68 @@ def generate_html_report(result):
 
         <h3>Confidence: {result['confidence']*100:.2f}%</h3>
 
-        <p><strong>File Name:</strong> {result['file_name']}</p>
+        <p><strong>File Name:</strong>
+        {result['file_name']}</p>
 
-        <p><strong>Analysis Time:</strong> {datetime.now()}</p>
+        <p><strong>Generated Time:</strong>
+        {datetime.now()}</p>
 
     </body>
+
     </html>
     """
 
     return html
 
-# ------------------------------
-# Download Button
-# ------------------------------
+# ---------------------------------------------------
+# DOWNLOAD BUTTON
+# ---------------------------------------------------
 def download_button(content, filename):
 
     b64 = base64.b64encode(
         content.encode()
     ).decode()
 
-    href = f'''
+    href = f"""
     <a href="data:text/html;base64,{b64}"
     download="{filename}">
-        Download Report
+        Download HTML Report
     </a>
-    '''
+    """
 
     return href
 
-# ------------------------------
-# UI
-# ------------------------------
-st.title("🔊 Audio Deepfake Detection")
+# ---------------------------------------------------
+# MAIN TITLE
+# ---------------------------------------------------
+st.markdown(
+    '<div class="main-title">🔊 Audio Deepfake Detection</div>',
+    unsafe_allow_html=True
+)
 
-st.write("Upload an audio file to detect fake audio.")
+st.markdown(
+    '<div class="subtitle">Upload audio to detect fake audio</div>',
+    unsafe_allow_html=True
+)
 
+# ---------------------------------------------------
+# FILE UPLOAD
+# ---------------------------------------------------
 uploaded_file = st.file_uploader(
     "Upload Audio File",
     type=['wav', 'mp3', 'ogg', 'flac', 'm4a']
 )
 
-# ------------------------------
-# Prediction
-# ------------------------------
+# ---------------------------------------------------
+# MAIN PROCESS
+# ---------------------------------------------------
 if uploaded_file is not None:
 
     st.audio(uploaded_file)
 
-    file_size = len(uploaded_file.getvalue()) / (1024 * 1024)
+    file_size = (
+        len(uploaded_file.getvalue()) / (1024 * 1024)
+    )
 
     st.write(f"📄 File Name: {uploaded_file.name}")
     st.write(f"💾 File Size: {file_size:.2f} MB")
@@ -220,39 +297,63 @@ if uploaded_file is not None:
         if model is None:
             st.stop()
 
-        with st.spinner("Processing Audio..."):
+        with st.spinner("Analyzing Audio..."):
 
-            file_type = uploaded_file.name.split(".")[-1].lower()
-
-            features, audio_data, sr = extract_features_from_audio(
-                uploaded_file.getvalue(),
-                file_type
+            features, audio_data, sr = (
+                extract_features_from_audio(
+                    uploaded_file.getvalue()
+                )
             )
 
             if features is not None:
 
-                prediction = model.predict(features)
+                prediction = model.predict(
+                    features,
+                    verbose=0
+                )
 
                 confidence = float(prediction[0][0])
 
                 is_deepfake = confidence > 0.5
 
-                # Results
+                # ---------------------------------------------------
+                # RESULT
+                # ---------------------------------------------------
                 if is_deepfake:
-                    st.error("🚨 Deepfake Audio Detected")
+
+                    st.markdown(
+                        '<div class="result-box fake">'
+                        '🚨 Deepfake Audio Detected'
+                        '</div>',
+                        unsafe_allow_html=True
+                    )
+
                 else:
-                    st.success("✅ Authentic Audio")
 
-                st.write(f"Confidence: {confidence*100:.2f}%")
+                    st.markdown(
+                        '<div class="result-box real">'
+                        '✅ Authentic Audio'
+                        '</div>',
+                        unsafe_allow_html=True
+                    )
 
-                # Gauge
+                st.write(
+                    f"### Confidence: {confidence*100:.2f}%"
+                )
+
+                # ---------------------------------------------------
+                # GAUGE
+                # ---------------------------------------------------
                 gauge_fig = create_gauge(confidence)
+
                 st.plotly_chart(
                     gauge_fig,
                     use_container_width=True
                 )
 
-                # Waveform
+                # ---------------------------------------------------
+                # WAVEFORM
+                # ---------------------------------------------------
                 waveform_fig = create_waveform(
                     audio_data,
                     sr
@@ -263,15 +364,21 @@ if uploaded_file is not None:
                     use_container_width=True
                 )
 
-                # Save Result
+                # ---------------------------------------------------
+                # SAVE RESULT
+                # ---------------------------------------------------
                 result = {
                     'confidence': confidence,
                     'is_deepfake': is_deepfake,
                     'file_name': uploaded_file.name
                 }
 
-                # Generate Report
-                html_report = generate_html_report(result)
+                # ---------------------------------------------------
+                # HTML REPORT
+                # ---------------------------------------------------
+                html_report = generate_html_report(
+                    result
+                )
 
                 st.markdown(
                     download_button(
@@ -281,13 +388,13 @@ if uploaded_file is not None:
                     unsafe_allow_html=True
                 )
 
-# ------------------------------
-# Sidebar
-# ------------------------------
+# ---------------------------------------------------
+# SIDEBAR
+# ---------------------------------------------------
 st.sidebar.title("About")
 
 st.sidebar.info("""
-This application detects whether an uploaded audio file is real or AI-generated using Deep Learning.
+This AI system detects whether an uploaded audio file is real or fake using Deep Learning.
 """)
 
 st.sidebar.markdown("""
@@ -297,4 +404,11 @@ st.sidebar.markdown("""
 - OGG
 - FLAC
 - M4A
+""")
+
+st.sidebar.markdown("""
+### Model Details
+- TensorFlow CNN Model
+- MFCC Features
+- Deepfake Audio Detection
 """)
