@@ -1,9 +1,6 @@
 streamlit
-tensorflow==2.15.0
-keras==2.15.0
-numpy
 librosa
+numpy
+scikit-learn
+tensorflow==2.13.0
 plotly
-soundfile
-audioread
-h5py
