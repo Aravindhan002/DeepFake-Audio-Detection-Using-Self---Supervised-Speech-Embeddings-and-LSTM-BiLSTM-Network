@@ -6,5 +6,4 @@ librosa
 plotly
 soundfile
 audioread
-pydub
-ffmpeg-python
+h5py
