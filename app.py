@@ -10,9 +10,9 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-# =========================
+# ======================================================
 # PAGE CONFIG
-# =========================
+# ======================================================
 
 st.set_page_config(
     page_title="Audio Deepfake Detection",
@@ -21,9 +21,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# =========================
+# ======================================================
 # MODERN UI CSS
-# =========================
+# ======================================================
 
 st.markdown("""
 <style>
@@ -34,38 +34,39 @@ html, body, [class*="css"] {
     font-family: 'Poppins', sans-serif;
 }
 
-/* Animated Background */
+/* Background */
+
 .stApp {
-    background: linear-gradient(-45deg, #0f172a, #111827, #1e293b, #0f172a);
+    background: linear-gradient(-45deg,#0f172a,#111827,#1e293b,#0f172a);
     background-size: 400% 400%;
     animation: gradientBG 15s ease infinite;
     color: white;
 }
 
 @keyframes gradientBG {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
+    0% {background-position:0% 50%;}
+    50% {background-position:100% 50%;}
+    100% {background-position:0% 50%;}
 }
 
 /* Header */
 
 .main-header {
-    text-align: center;
-    padding: 40px 20px;
+    text-align:center;
+    padding:40px 20px;
 }
 
 .main-header h1 {
-    font-size: 4rem;
-    font-weight: 700;
-    background: linear-gradient(90deg, #38bdf8, #818cf8, #ec4899);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size:4rem;
+    font-weight:700;
+    background: linear-gradient(90deg,#38bdf8,#818cf8,#ec4899);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
 .main-header p {
-    color: #cbd5e1;
-    font-size: 1.2rem;
+    color:#cbd5e1;
+    font-size:1.2rem;
 }
 
 /* Cards */
@@ -73,89 +74,89 @@ html, body, [class*="css"] {
 .glass-card {
     background: rgba(255,255,255,0.08);
     backdrop-filter: blur(18px);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 25px;
-    padding: 30px;
-    margin-bottom: 25px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-    transition: 0.4s;
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:25px;
+    padding:30px;
+    margin-bottom:25px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+    transition:0.4s;
 }
 
 .glass-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(56,189,248,0.25);
+    box-shadow:0 15px 40px rgba(56,189,248,0.25);
 }
 
 /* File uploader */
 
 .stFileUploader > div > div {
     background: rgba(255,255,255,0.05);
-    border: 2px dashed #38bdf8;
-    border-radius: 20px;
-    padding: 25px;
+    border:2px dashed #38bdf8;
+    border-radius:20px;
+    padding:25px;
 }
 
 /* Buttons */
 
 .stButton > button {
     background: linear-gradient(135deg,#38bdf8,#6366f1,#ec4899);
-    color: white;
-    border: none;
-    border-radius: 15px;
-    padding: 16px;
-    width: 100%;
-    font-weight: 600;
-    font-size: 16px;
-    transition: 0.4s;
+    color:white;
+    border:none;
+    border-radius:15px;
+    padding:16px;
+    width:100%;
+    font-size:16px;
+    font-weight:600;
+    transition:0.4s;
 }
 
 .stButton > button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 10px 30px rgba(236,72,153,0.4);
+    transform:scale(1.02);
+    box-shadow:0 10px 30px rgba(236,72,153,0.4);
 }
 
 /* Tabs */
 
 .stTabs [data-baseweb="tab"] {
     background: rgba(255,255,255,0.08);
-    border-radius: 15px;
-    color: white;
-    margin-right: 10px;
+    border-radius:15px;
+    color:white;
+    margin-right:10px;
 }
 
 .stTabs [aria-selected="true"] {
     background: linear-gradient(135deg,#38bdf8,#6366f1);
 }
 
-/* Metric Cards */
+/* Metric cards */
 
 .metric-card {
     background: rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    color: white;
-    margin-bottom: 15px;
+    border-radius:20px;
+    padding:20px;
+    text-align:center;
+    color:white;
+    margin-bottom:15px;
 }
 
-/* Result Indicators */
+/* Indicators */
 
 .real-indicator {
     background: linear-gradient(135deg,#22c55e,#15803d);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 40px;
-    display: inline-block;
-    font-weight: bold;
+    color:white;
+    padding:15px 25px;
+    border-radius:40px;
+    display:inline-block;
+    font-weight:bold;
 }
 
 .fake-indicator {
     background: linear-gradient(135deg,#ef4444,#b91c1c);
-    color: white;
-    padding: 15px 25px;
-    border-radius: 40px;
-    display: inline-block;
-    font-weight: bold;
+    color:white;
+    padding:15px 25px;
+    border-radius:40px;
+    display:inline-block;
+    font-weight:bold;
 }
 
 /* Sidebar */
@@ -165,7 +166,7 @@ section[data-testid="stSidebar"] {
 }
 
 section[data-testid="stSidebar"] * {
-    color: white !important;
+    color:white !important;
 }
 
 /* Progress */
@@ -174,49 +175,48 @@ section[data-testid="stSidebar"] * {
     background: linear-gradient(90deg,#38bdf8,#6366f1,#ec4899);
 }
 
-/* Audio */
-
-audio {
-    width: 100%;
-    margin-top: 15px;
-}
-
 /* Scrollbar */
 
 ::-webkit-scrollbar {
-    width: 8px;
+    width:8px;
 }
 
 ::-webkit-scrollbar-thumb {
     background: linear-gradient(#38bdf8,#6366f1);
-    border-radius: 20px;
+    border-radius:20px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# =========================
+# ======================================================
 # LOAD MODEL
-# =========================
+# ======================================================
 
 @st.cache_resource
 def load_model():
     try:
         model = tf.keras.models.load_model("updated_model.h5")
         return model
+
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
 
 model = load_model()
 
-# =========================
+# ======================================================
 # FEATURE EXTRACTION
-# =========================
+# ======================================================
 
 def extract_features(audio_bytes):
+
     try:
-        audio_array, sr = librosa.load(io.BytesIO(audio_bytes), sr=16000)
+
+        audio_array, sr = librosa.load(
+            io.BytesIO(audio_bytes),
+            sr=16000
+        )
 
         mfccs = librosa.feature.mfcc(
             y=audio_array,
@@ -227,32 +227,37 @@ def extract_features(audio_bytes):
         max_length = 500
 
         if mfccs.shape[1] < max_length:
+
             pad_width = max_length - mfccs.shape[1]
+
             mfccs = np.pad(
                 mfccs,
-                ((0, 0), (0, pad_width)),
+                ((0,0),(0,pad_width)),
                 mode='constant'
             )
+
         else:
             mfccs = mfccs[:, :max_length]
 
-        mfccs = mfccs.reshape(1, 40, 500, 1)
+        mfccs = mfccs.reshape(1,40,500,1)
 
         return mfccs, audio_array, sr
 
     except Exception as e:
+
         st.error(f"Error processing audio: {e}")
+
         return None, None, None
 
-# =========================
-# WAVEFORM
-# =========================
+# ======================================================
+# WAVEFORM PLOT
+# ======================================================
 
 def waveform_plot(audio_data, sr):
 
     time_axis = np.linspace(
         0,
-        len(audio_data) / sr,
+        len(audio_data)/sr,
         len(audio_data)
     )
 
@@ -273,9 +278,9 @@ def waveform_plot(audio_data, sr):
 
     return fig
 
-# =========================
+# ======================================================
 # MFCC PLOT
-# =========================
+# ======================================================
 
 def mfcc_plot(features):
 
@@ -294,9 +299,9 @@ def mfcc_plot(features):
 
     return fig
 
-# =========================
+# ======================================================
 # HEADER
-# =========================
+# ======================================================
 
 st.markdown("""
 <div class="main-header">
@@ -305,9 +310,9 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# =========================
+# ======================================================
 # MAIN CARD
-# =========================
+# ======================================================
 
 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
@@ -315,7 +320,7 @@ st.subheader("📤 Upload Audio File")
 
 uploaded_file = st.file_uploader(
     "Upload Audio",
-    type=['wav', 'mp3', 'ogg', 'flac', 'm4a']
+    type=['wav','mp3','ogg','flac','m4a']
 )
 
 if uploaded_file is not None:
@@ -333,6 +338,7 @@ if uploaded_file is not None:
         """, unsafe_allow_html=True)
 
     with col2:
+
         size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
 
         st.markdown(f"""
@@ -352,9 +358,9 @@ if uploaded_file is not None:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
-# =========================
+# ======================================================
 # ANALYZE BUTTON
-# =========================
+# ======================================================
 
 if uploaded_file is not None:
 
@@ -383,11 +389,14 @@ if uploaded_file is not None:
                 st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
                 if is_fake:
+
                     st.markdown(
                         '<div class="fake-indicator">🚨 DEEPFAKE DETECTED</div>',
                         unsafe_allow_html=True
                     )
+
                 else:
+
                     st.markdown(
                         '<div class="real-indicator">✅ AUTHENTIC AUDIO</div>',
                         unsafe_allow_html=True
@@ -406,19 +415,35 @@ if uploaded_file is not None:
                     "📊 Statistics"
                 ])
 
+                # ======================================================
+                # WAVEFORM TAB
+                # ======================================================
+
                 with tabs[0]:
+
                     fig1 = waveform_plot(audio_data, sr)
+
                     st.plotly_chart(
                         fig1,
                         use_container_width=True
                     )
 
+                # ======================================================
+                # MFCC TAB
+                # ======================================================
+
                 with tabs[1]:
+
                     fig2 = mfcc_plot(features)
+
                     st.plotly_chart(
                         fig2,
                         use_container_width=True
                     )
+
+                # ======================================================
+                # STATS TAB
+                # ======================================================
 
                 with tabs[2]:
 
@@ -444,11 +469,102 @@ if uploaded_file is not None:
                             datetime.now().strftime("%H:%M:%S")
                         )
 
+                # ======================================================
+                # HTML REPORT DOWNLOAD
+                # ======================================================
+
+                st.markdown("## 📄 Download Analysis Report")
+
+                report_html = f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Deepfake Audio Report</title>
+
+                    <style>
+
+                    body {{
+                        font-family: Arial;
+                        background: #0f172a;
+                        color: white;
+                        padding: 40px;
+                    }}
+
+                    .container {{
+                        background: #1e293b;
+                        padding: 30px;
+                        border-radius: 20px;
+                    }}
+
+                    h1 {{
+                        color: #38bdf8;
+                    }}
+
+                    .result {{
+                        padding: 15px;
+                        border-radius: 12px;
+                        font-size: 20px;
+                        font-weight: bold;
+                        margin-top: 20px;
+                        background: {"#dc2626" if is_fake else "#16a34a"};
+                    }}
+
+                    .info {{
+                        margin-top: 20px;
+                        background: #334155;
+                        padding: 20px;
+                        border-radius: 15px;
+                    }}
+
+                    p {{
+                        font-size: 18px;
+                    }}
+
+                    </style>
+                </head>
+
+                <body>
+
+                <div class="container">
+
+                <h1>🔊 Audio Deepfake Detection Report</h1>
+
+                <div class="result">
+                {"🚨 DEEPFAKE DETECTED" if is_fake else "✅ AUTHENTIC AUDIO"}
+                </div>
+
+                <div class="info">
+
+                <p><strong>File Name:</strong> {uploaded_file.name}</p>
+
+                <p><strong>Confidence:</strong> {confidence*100:.2f}%</p>
+
+                <p><strong>Duration:</strong> {duration:.2f} sec</p>
+
+                <p><strong>Sample Rate:</strong> {sr} Hz</p>
+
+                <p><strong>Generated Time:</strong> {datetime.now()}</p>
+
+                </div>
+
+                </div>
+
+                </body>
+                </html>
+                """
+
+                st.download_button(
+                    label="📥 Download HTML Report",
+                    data=report_html,
+                    file_name="deepfake_report.html",
+                    mime="text/html"
+                )
+
                 st.markdown('</div>', unsafe_allow_html=True)
 
-# =========================
+# ======================================================
 # SIDEBAR
-# =========================
+# ======================================================
 
 with st.sidebar:
 
@@ -483,4 +599,4 @@ with st.sidebar:
 
     st.info(
         "Upload an audio file and analyze whether it is authentic or AI generated."
-    )
+)
