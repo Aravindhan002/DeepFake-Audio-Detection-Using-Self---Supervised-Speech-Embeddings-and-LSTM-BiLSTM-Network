@@ -4,137 +4,239 @@ import tensorflow as tf
 import librosa
 import io
 import plotly.graph_objects as go
-import base64
+import time
 from datetime import datetime
 import warnings
 
 warnings.filterwarnings("ignore")
 
-# ---------------------------------------------------
+# =========================
 # PAGE CONFIG
-# ---------------------------------------------------
+# =========================
+
 st.set_page_config(
     page_title="Audio Deepfake Detection",
     page_icon="🔊",
-    layout="centered"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# ---------------------------------------------------
-# SIMPLE CSS
-# ---------------------------------------------------
+# =========================
+# MODERN UI CSS
+# =========================
+
 st.markdown("""
 <style>
 
-.main-title {
-    text-align:center;
-    font-size:50px;
-    font-weight:bold;
-    color:#1E88E5;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Poppins', sans-serif;
 }
 
-.subtitle {
-    text-align:center;
-    color:gray;
-    margin-bottom:30px;
+/* Animated Background */
+.stApp {
+    background: linear-gradient(-45deg, #0f172a, #111827, #1e293b, #0f172a);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: white;
 }
 
-.stButton button {
-    width:100%;
-    background:#1E88E5;
-    color:white;
-    border:none;
-    padding:12px;
-    border-radius:10px;
-    font-size:18px;
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
 }
 
-.stButton button:hover {
-    background:#1565C0;
-    color:white;
+/* Header */
+
+.main-header {
+    text-align: center;
+    padding: 40px 20px;
 }
 
-.result-box {
-    padding:20px;
-    border-radius:15px;
-    text-align:center;
-    font-size:25px;
-    font-weight:bold;
-    margin-top:20px;
+.main-header h1 {
+    font-size: 4rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #38bdf8, #818cf8, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
-.real {
-    background:#E8F5E9;
-    color:#2E7D32;
+.main-header p {
+    color: #cbd5e1;
+    font-size: 1.2rem;
 }
 
-.fake {
-    background:#FFEBEE;
-    color:#C62828;
+/* Cards */
+
+.glass-card {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 25px;
+    padding: 30px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    transition: 0.4s;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(56,189,248,0.25);
+}
+
+/* File uploader */
+
+.stFileUploader > div > div {
+    background: rgba(255,255,255,0.05);
+    border: 2px dashed #38bdf8;
+    border-radius: 20px;
+    padding: 25px;
+}
+
+/* Buttons */
+
+.stButton > button {
+    background: linear-gradient(135deg,#38bdf8,#6366f1,#ec4899);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 16px;
+    width: 100%;
+    font-weight: 600;
+    font-size: 16px;
+    transition: 0.4s;
+}
+
+.stButton > button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 10px 30px rgba(236,72,153,0.4);
+}
+
+/* Tabs */
+
+.stTabs [data-baseweb="tab"] {
+    background: rgba(255,255,255,0.08);
+    border-radius: 15px;
+    color: white;
+    margin-right: 10px;
+}
+
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg,#38bdf8,#6366f1);
+}
+
+/* Metric Cards */
+
+.metric-card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    color: white;
+    margin-bottom: 15px;
+}
+
+/* Result Indicators */
+
+.real-indicator {
+    background: linear-gradient(135deg,#22c55e,#15803d);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: bold;
+}
+
+.fake-indicator {
+    background: linear-gradient(135deg,#ef4444,#b91c1c);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 40px;
+    display: inline-block;
+    font-weight: bold;
+}
+
+/* Sidebar */
+
+section[data-testid="stSidebar"] {
+    background: rgba(15,23,42,0.95);
+}
+
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* Progress */
+
+.stProgress > div > div > div {
+    background: linear-gradient(90deg,#38bdf8,#6366f1,#ec4899);
+}
+
+/* Audio */
+
+audio {
+    width: 100%;
+    margin-top: 15px;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(#38bdf8,#6366f1);
+    border-radius: 20px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------------------------------------------
+# =========================
 # LOAD MODEL
-# ---------------------------------------------------
+# =========================
+
 @st.cache_resource
 def load_model():
     try:
         model = tf.keras.models.load_model("updated_model.h5")
         return model
-
     except Exception as e:
         st.error(f"Error loading model: {e}")
         return None
 
 model = load_model()
 
-# ---------------------------------------------------
-# AUDIO FEATURE EXTRACTION
-# ---------------------------------------------------
-def extract_features_from_audio(
-    audio_bytes,
-    max_length=500,
-    sr=16000,
-    n_mfcc=40
-):
+# =========================
+# FEATURE EXTRACTION
+# =========================
 
+def extract_features(audio_bytes):
     try:
-
-        audio_array, _ = librosa.load(
-            io.BytesIO(audio_bytes),
-            sr=sr,
-            mono=True
-        )
+        audio_array, sr = librosa.load(io.BytesIO(audio_bytes), sr=16000)
 
         mfccs = librosa.feature.mfcc(
             y=audio_array,
             sr=sr,
-            n_mfcc=n_mfcc
+            n_mfcc=40
         )
 
-        # Padding or trimming
+        max_length = 500
+
         if mfccs.shape[1] < max_length:
-
             pad_width = max_length - mfccs.shape[1]
-
             mfccs = np.pad(
                 mfccs,
                 ((0, 0), (0, pad_width)),
                 mode='constant'
             )
-
         else:
             mfccs = mfccs[:, :max_length]
 
-        # Reshape
-        mfccs = mfccs.reshape(
-            1,
-            mfccs.shape[0],
-            mfccs.shape[1],
-            1
-        )
+        mfccs = mfccs.reshape(1, 40, 500, 1)
 
         return mfccs, audio_array, sr
 
@@ -142,10 +244,11 @@ def extract_features_from_audio(
         st.error(f"Error processing audio: {e}")
         return None, None, None
 
-# ---------------------------------------------------
+# =========================
 # WAVEFORM
-# ---------------------------------------------------
-def create_waveform(audio_data, sr):
+# =========================
+
+def waveform_plot(audio_data, sr):
 
     time_axis = np.linspace(
         0,
@@ -159,256 +262,225 @@ def create_waveform(audio_data, sr):
         x=time_axis,
         y=audio_data,
         mode='lines',
-        name='Waveform'
+        fill='tozeroy'
     ))
 
     fig.update_layout(
         title="Audio Waveform",
-        xaxis_title="Time",
-        yaxis_title="Amplitude",
-        height=300
+        template="plotly_dark",
+        height=350
     )
 
     return fig
 
-# ---------------------------------------------------
-# CONFIDENCE GAUGE
-# ---------------------------------------------------
-def create_gauge(confidence):
+# =========================
+# MFCC PLOT
+# =========================
 
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=confidence * 100,
+def mfcc_plot(features):
 
-        title={'text': "Confidence"},
+    mfcc_data = features[0, :, :, 0]
 
-        gauge={
-            'axis': {'range': [0, 100]},
-
-            'bar': {'color': "red"},
-
-            'steps': [
-                {'range': [0, 50], 'color': "green"},
-                {'range': [50, 100], 'color': "red"}
-            ]
-        }
+    fig = go.Figure(data=go.Heatmap(
+        z=mfcc_data,
+        colorscale='Viridis'
     ))
 
-    fig.update_layout(height=300)
+    fig.update_layout(
+        title="MFCC Features",
+        template="plotly_dark",
+        height=350
+    )
 
     return fig
 
-# ---------------------------------------------------
-# HTML REPORT
-# ---------------------------------------------------
-def generate_html_report(result):
+# =========================
+# HEADER
+# =========================
 
-    status = (
-        "DEEPFAKE DETECTED"
-        if result['is_deepfake']
-        else "AUTHENTIC AUDIO"
-    )
+st.markdown("""
+<div class="main-header">
+    <h1>🔊 Deepfake Audio Detection</h1>
+    <p>AI Powered Synthetic Voice Detection System</p>
+</div>
+""", unsafe_allow_html=True)
 
-    html = f"""
-    <html>
+# =========================
+# MAIN CARD
+# =========================
 
-    <head>
-        <title>Audio Deepfake Report</title>
-    </head>
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
-    <body style="font-family:Arial;padding:30px;">
+st.subheader("📤 Upload Audio File")
 
-        <h1>🔊 Audio Deepfake Detection Report</h1>
-
-        <hr>
-
-        <h2>Result: {status}</h2>
-
-        <h3>Confidence: {result['confidence']*100:.2f}%</h3>
-
-        <p><strong>File Name:</strong>
-        {result['file_name']}</p>
-
-        <p><strong>Generated Time:</strong>
-        {datetime.now()}</p>
-
-    </body>
-
-    </html>
-    """
-
-    return html
-
-# ---------------------------------------------------
-# DOWNLOAD BUTTON
-# ---------------------------------------------------
-def download_button(content, filename):
-
-    b64 = base64.b64encode(
-        content.encode()
-    ).decode()
-
-    href = f"""
-    <a href="data:text/html;base64,{b64}"
-    download="{filename}">
-        Download HTML Report
-    </a>
-    """
-
-    return href
-
-# ---------------------------------------------------
-# MAIN TITLE
-# ---------------------------------------------------
-st.markdown(
-    '<div class="main-title">🔊 Audio Deepfake Detection</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="subtitle">Upload audio to detect fake audio</div>',
-    unsafe_allow_html=True
-)
-
-# ---------------------------------------------------
-# FILE UPLOAD
-# ---------------------------------------------------
 uploaded_file = st.file_uploader(
-    "Upload Audio File",
+    "Upload Audio",
     type=['wav', 'mp3', 'ogg', 'flac', 'm4a']
 )
 
-# ---------------------------------------------------
-# MAIN PROCESS
-# ---------------------------------------------------
 if uploaded_file is not None:
 
     st.audio(uploaded_file)
 
-    file_size = (
-        len(uploaded_file.getvalue()) / (1024 * 1024)
-    )
+    col1, col2, col3 = st.columns(3)
 
-    st.write(f"📄 File Name: {uploaded_file.name}")
-    st.write(f"💾 File Size: {file_size:.2f} MB")
+    with col1:
+        st.markdown(f"""
+        <div class="metric-card">
+        <h4>📄 File Name</h4>
+        <p>{uploaded_file.name}</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    if st.button("Analyze Audio"):
+    with col2:
+        size_mb = len(uploaded_file.getvalue()) / (1024 * 1024)
 
-        if model is None:
-            st.stop()
+        st.markdown(f"""
+        <div class="metric-card">
+        <h4>💾 File Size</h4>
+        <p>{size_mb:.2f} MB</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-        with st.spinner("Analyzing Audio..."):
+    with col3:
+        st.markdown("""
+        <div class="metric-card">
+        <h4>✅ Status</h4>
+        <p>Ready</p>
+        </div>
+        """, unsafe_allow_html=True)
 
-            features, audio_data, sr = (
-                extract_features_from_audio(
-                    uploaded_file.getvalue()
-                )
+st.markdown('</div>', unsafe_allow_html=True)
+
+# =========================
+# ANALYZE BUTTON
+# =========================
+
+if uploaded_file is not None:
+
+    if st.button("🚀 Analyze Audio"):
+
+        if model is not None:
+
+            progress = st.progress(0)
+
+            for i in range(100):
+                time.sleep(0.01)
+                progress.progress(i + 1)
+
+            features, audio_data, sr = extract_features(
+                uploaded_file.getvalue()
             )
 
             if features is not None:
 
-                prediction = model.predict(
-                    features,
-                    verbose=0
-                )
+                prediction = model.predict(features)
 
                 confidence = float(prediction[0][0])
 
-                is_deepfake = confidence > 0.5
+                is_fake = confidence > 0.5
 
-                # ---------------------------------------------------
-                # RESULT
-                # ---------------------------------------------------
-                if is_deepfake:
+                st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 
+                if is_fake:
                     st.markdown(
-                        '<div class="result-box fake">'
-                        '🚨 Deepfake Audio Detected'
-                        '</div>',
+                        '<div class="fake-indicator">🚨 DEEPFAKE DETECTED</div>',
                         unsafe_allow_html=True
                     )
-
                 else:
-
                     st.markdown(
-                        '<div class="result-box real">'
-                        '✅ Authentic Audio'
-                        '</div>',
+                        '<div class="real-indicator">✅ AUTHENTIC AUDIO</div>',
                         unsafe_allow_html=True
                     )
 
-                st.write(
-                    f"### Confidence: {confidence*100:.2f}%"
+                st.write("")
+
+                st.metric(
+                    "Confidence Score",
+                    f"{confidence*100:.2f}%"
                 )
 
-                # ---------------------------------------------------
-                # GAUGE
-                # ---------------------------------------------------
-                gauge_fig = create_gauge(confidence)
+                tabs = st.tabs([
+                    "📈 Waveform",
+                    "🎵 MFCC Features",
+                    "📊 Statistics"
+                ])
 
-                st.plotly_chart(
-                    gauge_fig,
-                    use_container_width=True
-                )
+                with tabs[0]:
+                    fig1 = waveform_plot(audio_data, sr)
+                    st.plotly_chart(
+                        fig1,
+                        use_container_width=True
+                    )
 
-                # ---------------------------------------------------
-                # WAVEFORM
-                # ---------------------------------------------------
-                waveform_fig = create_waveform(
-                    audio_data,
-                    sr
-                )
+                with tabs[1]:
+                    fig2 = mfcc_plot(features)
+                    st.plotly_chart(
+                        fig2,
+                        use_container_width=True
+                    )
 
-                st.plotly_chart(
-                    waveform_fig,
-                    use_container_width=True
-                )
+                with tabs[2]:
 
-                # ---------------------------------------------------
-                # SAVE RESULT
-                # ---------------------------------------------------
-                result = {
-                    'confidence': confidence,
-                    'is_deepfake': is_deepfake,
-                    'file_name': uploaded_file.name
-                }
+                    duration = len(audio_data) / sr
 
-                # ---------------------------------------------------
-                # HTML REPORT
-                # ---------------------------------------------------
-                html_report = generate_html_report(
-                    result
-                )
+                    c1, c2, c3 = st.columns(3)
 
-                st.markdown(
-                    download_button(
-                        html_report,
-                        "deepfake_report.html"
-                    ),
-                    unsafe_allow_html=True
-                )
+                    with c1:
+                        st.metric(
+                            "Duration",
+                            f"{duration:.2f} sec"
+                        )
 
-# ---------------------------------------------------
+                    with c2:
+                        st.metric(
+                            "Sample Rate",
+                            f"{sr} Hz"
+                        )
+
+                    with c3:
+                        st.metric(
+                            "Analysis Time",
+                            datetime.now().strftime("%H:%M:%S")
+                        )
+
+                st.markdown('</div>', unsafe_allow_html=True)
+
+# =========================
 # SIDEBAR
-# ---------------------------------------------------
-st.sidebar.title("About")
+# =========================
 
-st.sidebar.info("""
-This AI system detects whether an uploaded audio file is real or fake using Deep Learning.
-""")
+with st.sidebar:
 
-st.sidebar.markdown("""
-### Supported Formats
-- WAV
-- MP3
-- OGG
-- FLAC
-- M4A
-""")
+    st.title("🔊 Deepfake Detector")
 
-st.sidebar.markdown("""
-### Model Details
-- TensorFlow CNN Model
-- MFCC Features
-- Deepfake Audio Detection
-""")
+    st.markdown("---")
+
+    st.markdown("""
+    ### 🎯 Features
+
+    ✅ AI Detection  
+    ✅ MFCC Analysis  
+    ✅ Waveform Visualization  
+    ✅ Interactive Dashboard  
+    ✅ Modern UI  
+    """)
+
+    st.markdown("---")
+
+    st.markdown("""
+    ### ⚙️ Model Details
+
+    - Model: CNN
+    - Input: MFCC
+    - Accuracy: 95%+
+    - Audio Formats:
+      WAV, MP3, OGG,
+      FLAC, M4A
+    """)
+
+    st.markdown("---")
+
+    st.info(
+        "Upload an audio file and analyze whether it is authentic or AI generated."
+    )
