@@ -936,7 +936,7 @@ def main():
                 @st.cache_resource
                 def load_model():
                     try:
-                        tf.keras.models.load_model("my_model.h5")
+                        model = tf.keras.models.load_model("updated_model.h5")
                         return model
                     except Exception as e:
                         st.error(f"Error loading model: {e}")
